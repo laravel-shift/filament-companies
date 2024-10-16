@@ -59,6 +59,10 @@ php artisan migrate:fresh
 
 # Preparing Your Application
 
+### Demo
+
+If you encounter any issues while setting up your application with this package, you can refer to an example implementation here: [Filament Companies Example App](https://github.com/andrewdwallo/filament-companies-example-app).
+
 ### Creating a Theme
 
 After installation, there will be a company panel registered for your application. It is located within the `FilamentCompaniesServiceProvider.php` file.
