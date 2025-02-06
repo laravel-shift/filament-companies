@@ -68,4 +68,25 @@ class CreateCompany extends FilamentRegisterTenant
             ->body(Str::inlineMarkdown(__('filament-companies::default.notifications.company_created.body', compact('name'))))
             ->send();
     }
+
+
+    public function mount(): void
+    {
+        // Auto-Accept invitation if user just registered (= belongs to / has no Company yet)
+        $user = Auth::user();
+        if (FilamentCompanies::autoAcceptsInvitations() && !$user->hasAnyCompanies()) {
+            $model = FilamentCompanies::companyInvitationModel();
+            $invitation = $model::where('email', $user->email)->first();
+            if ($invitation) {
+                redirect(FilamentCompanies::generateAcceptInvitationUrl($invitation));
+            }
+        }
+
+        // redirect to user profile if user is not allowed to view this page
+        if (!static::canView()) {
+            redirect(route('filament.user.home'));
+        }
+
+        $this->form->fill();
+    }
 }

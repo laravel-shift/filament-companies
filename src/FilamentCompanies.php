@@ -31,6 +31,7 @@ class FilamentCompanies implements Plugin
     use Concerns\Base\HasPermissions;
     use Concerns\Base\HasRoutes;
     use Concerns\Base\HasTermsAndPrivacyPolicy;
+    use Concerns\Base\HasAutoAcceptInvitations;
     use Concerns\ManagesProfileComponents;
     use Concerns\Socialite\CanEnableSocialite;
     use Concerns\Socialite\HasConnectedAccountModel;

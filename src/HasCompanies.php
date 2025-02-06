@@ -85,6 +85,15 @@ trait HasCompanies
     }
 
     /**
+     * Determine if the user has access to any tenant at all.
+     */
+
+     public function hasAnyCompanies(): bool
+     {
+         return count($this->allCompanies()) > 0;
+     }
+
+    /**
      * Determine if the user owns the given company.
      */
     public function ownsCompany(mixed $company): bool
