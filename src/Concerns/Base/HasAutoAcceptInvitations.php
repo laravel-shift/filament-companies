@@ -5,12 +5,12 @@ namespace Wallo\FilamentCompanies\Concerns\Base;
 trait HasAutoAcceptInvitations
 {
     /**
-     * Indicates if Company Invitations will be accepted automatically after a invited user registers a new account.
+     * Determines whether invited users are exempt from creating a personal company after registration.
      */
-    public static ?bool $autoAcceptInvitations = false;
+    public static bool $autoAcceptInvitations = false;
 
     /**
-     * Configure Company Invitations to be accepted automatically after routes.
+     * Configure the system to allow invited users to register without creating a personal company.
      */
     public function autoAcceptInvitations(): static
     {
@@ -20,7 +20,7 @@ trait HasAutoAcceptInvitations
     }
 
     /**
-     * Get the configuration.
+     * Check if invited users can register without creating a personal company.
      */
     public static function autoAcceptsInvitations(): string
     {
