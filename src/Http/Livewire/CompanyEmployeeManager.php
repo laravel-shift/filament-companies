@@ -2,6 +2,7 @@
 
 namespace Wallo\FilamentCompanies\Http\Livewire;
 
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -180,6 +181,10 @@ class CompanyEmployeeManager extends Component
         $this->dispatch('close-modal', id: 'confirmingLeavingCompany');
 
         $this->company = $this->company->fresh();
+
+        if (! Auth::user()->fresh()->hasAnyCompanies() && ($tenantRegistrationUrl = Filament::getPanel(FilamentCompanies::getCompanyPanel())?->getTenantRegistrationUrl())) {
+            return redirect($tenantRegistrationUrl);
+        }
 
         return $this->redirectPath($remover);
     }

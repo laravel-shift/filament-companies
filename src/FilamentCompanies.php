@@ -4,6 +4,7 @@ namespace Wallo\FilamentCompanies;
 
 use Filament\Contracts\Plugin;
 use Filament\Events\TenantSet;
+use Filament\Http\Responses\Auth\Contracts\RegistrationResponse as RegistrationResponseContract;
 use Filament\Panel;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Event;
@@ -13,6 +14,7 @@ use Wallo\FilamentCompanies\Contracts\CreatesUserFromProvider;
 use Wallo\FilamentCompanies\Contracts\HandlesInvalidState;
 use Wallo\FilamentCompanies\Contracts\UpdatesConnectedAccounts;
 use Wallo\FilamentCompanies\Http\Controllers\OAuthController;
+use Wallo\FilamentCompanies\Http\Responses\Auth\FilamentCompaniesRegistrationResponse;
 use Wallo\FilamentCompanies\Listeners\SwitchCurrentCompany;
 use Wallo\FilamentCompanies\Pages\Company\CompanySettings;
 use Wallo\FilamentCompanies\Pages\Company\CreateCompany;
@@ -20,6 +22,7 @@ use Wallo\FilamentCompanies\Pages\Company\CreateCompany;
 class FilamentCompanies implements Plugin
 {
     use Concerns\Base\HasAddedProfileComponents;
+    use Concerns\Base\HasAutoAcceptInvitations;
     use Concerns\Base\HasBaseActionBindings;
     use Concerns\Base\HasBaseModels;
     use Concerns\Base\HasBaseProfileComponents;
@@ -31,7 +34,6 @@ class FilamentCompanies implements Plugin
     use Concerns\Base\HasPermissions;
     use Concerns\Base\HasRoutes;
     use Concerns\Base\HasTermsAndPrivacyPolicy;
-    use Concerns\Base\HasAutoAcceptInvitations;
     use Concerns\ManagesProfileComponents;
     use Concerns\Socialite\CanEnableSocialite;
     use Concerns\Socialite\HasConnectedAccountModel;
@@ -57,6 +59,8 @@ class FilamentCompanies implements Plugin
             Livewire::component('filament.pages.companies.create_company', CreateCompany::class);
             Livewire::component('filament.pages.companies.company_settings', CompanySettings::class);
         }
+
+        app()->bind(RegistrationResponseContract::class, FilamentCompaniesRegistrationResponse::class);
 
         if (static::hasSocialiteFeatures()) {
             app()->bind(OAuthController::class, static function (Application $app) {
