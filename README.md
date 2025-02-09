@@ -495,7 +495,17 @@ class UpdateUserPassword implements UpdatesUserPasswords
 
 ## Company Invitations
 
-### Example - Gmail
+### AutoAcceptInvitiation
+
+If `->autoAcceptInvitations()` is set, users will join Companies automatically on registration, as long as a invitation with their emailadress exists. If not set, they will be asked to create a personal Company first.
+```php
+    FilamentCompanies::make()
+        ->companies(invitations: true)
+        ->autoAcceptInvitations()
+```
+
+
+### Example - Send Invitation Mail via Gmail SMTP
 
 1. **Sign in** to your account
 
