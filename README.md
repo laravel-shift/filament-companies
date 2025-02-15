@@ -26,6 +26,7 @@ A comprehensive multi-tenant authentication and authorization solution designed 
 - 🔥 **Company Management**
 - 🔥 **Employee Invitations via Email**
 - 🔥 **Roles & Permissions**
+- 🔥 **Auto-Accept Invitations**
 
 # Getting Started
 
@@ -33,7 +34,7 @@ A comprehensive multi-tenant authentication and authorization solution designed 
 * Configure your database
 * Install the [Panel Builder](https://filamentphp.com/docs/3.x/panels/installation#installation)
 
-After installing the Panel Builder, make sure that you have created a panel using the following command:
+After installing the Panel Builder, ensure you create a panel using the following command:
 ```shell
 php artisan filament:install --panels
 ```
@@ -61,7 +62,7 @@ php artisan migrate:fresh
 
 ### Demo
 
-If you encounter any issues while setting up your application with this package, you can refer to an example implementation here: [Filament Companies Example App](https://github.com/andrewdwallo/filament-companies-example-app).
+If you encounter any issues while setting up your application with this package, refer to the example implementation here: [Filament Companies Example App](https://github.com/andrewdwallo/filament-companies-example-app).
 
 ### Creating a Theme
 
@@ -82,7 +83,7 @@ Here is a reference to the instructions that should show after running the comma
 ⇂ Finally, run `npm run build` to compile the theme
 ```
 
-After completing the process for creating a custom theme for the company panel, add this package's vendor directory into the content array of the `tailwind.config.js` file that should be located in the `resources/css/filament/company/` directory of your application:
+Once the custom theme for the company panel is created, add this package's vendor directory to the `content` array in the `tailwind.config.js` file, located in `resources/css/filament/company/`:
 ```js
 export default {
     content: [
@@ -117,9 +118,9 @@ public function panel(Panel $panel): Panel
 ```
 > 🛑 You may create a separate User Panel following the documentation for [creating a new panel](https://filamentphp.com/docs/3.x/panels/configuration#creating-a-new-panel)
 
-You must provide a way for your users to navigate to the Profile and Personal Access Tokens pages.
+Ensure users have a way to navigate to the Profile and Personal Access Tokens pages.
 
-It would also be wise to allow your users to navigate back to the Company Panel. 
+Users should also have a way to navigate back to the Company Panel.
 
 You may use the following as a guide:
 ```php
@@ -137,20 +138,38 @@ public function panel(Panel $panel): Panel
             'profile' => MenuItem::make()
                 ->label('Profile')
                 ->icon('heroicon-o-user-circle')
-                ->url(static fn () => url(Profile::getUrl())),
+                ->url(static fn () => Profile::getUrl()),
             MenuItem::make()
                 ->label('Company')
                 ->icon('heroicon-o-building-office')
-                ->url(static fn () => url(Pages\Dashboard::getUrl(panel: 'company', tenant: Auth::user()->personalCompany()))),
+                ->url(static fn () => Pages\Dashboard::getUrl(panel: FilamentCompanies::getCompanyPanel(), tenant: Auth::user()->personalCompany())),
         ])
         ->navigationItems([
             NavigationItem::make('Personal Access Tokens')
                 ->label(static fn (): string => __('filament-companies::default.navigation.links.tokens'))
                 ->icon('heroicon-o-key')
-                ->url(static fn () => url(PersonalAccessTokens::getUrl())),
+                ->url(static fn () => PersonalAccessTokens::getUrl()),
         ])
 }
 ```
+
+If [**Auto-Accept Invitations**](#auto-accept-invitations) is enabled, the Company menu item logic must handle cases where the user does not have a personal company to avoid errors. One way to do this is as follows:
+```php
+MenuItem::make()
+    ->label('Company')
+    ->icon('heroicon-o-building-office')
+    ->url(function (): string {
+        $user = Auth::user();
+
+        if ($company = $user?->primaryCompany()) {
+            return Pages\Dashboard::getUrl(panel: FilamentCompanies::getCompanyPanel(), tenant: $company);
+        }
+
+        return Filament::getPanel(FilamentCompanies::getCompanyPanel())->getTenantRegistrationUrl();
+    }),
+```
+> [!NOTE]
+> This modification is necessary because, when Auto-Accept Invitations is enabled, an invited user may not have a personal company. Without this adjustment, generating a URL with a `null` tenant may cause an error.
 
 You may change the value used for the User Panel using the `id` of the panel:
 ```php
@@ -216,10 +235,12 @@ class FilamentCompaniesServiceProvider extends PanelProvider
     }
 }
 ```
+> [!CAUTION]
+> This feature is a core part of the package and should typically remain enabled. Disabling it will prevent users from switching between companies, which may not be desirable for most use cases.
 
 ## Configuring Profile Features
 
-You can selectively enable or disable certain profile features. If you choose to omit a feature, it will be considered as disabled (`false`) by default.
+You can selectively enable or disable certain profile features. If a feature is omitted, it will be disabled by default.
 
 To do so, modify your `FilamentCompaniesServiceProvider` class as shown below:
 
@@ -250,7 +271,8 @@ class FilamentCompaniesServiceProvider extends PanelProvider
 
 Personalize your application by replacing default components with your own custom components. This is done by passing your custom component's class name to the component parameter of the relevant method.
 
-**Important:** Your custom component must have a unique class name. This is crucial to prevent conflicts and ensure proper functioning, as Livewire differentiates components primarily by their class names. Even if your custom component is in a different namespace, having the same class name as a component in the package can lead to unexpected errors and behavior.
+> [!IMPORTANT]
+> Your custom component must have a unique class name. This is crucial to prevent conflicts and ensure proper functioning, as Livewire differentiates components primarily by their class names. Even if your custom component is in a different namespace, having the same class name as a component in the package can lead to unexpected errors and behavior.
 
 Here's an example of how to use a custom component for updating profile information:
 
@@ -497,12 +519,18 @@ class UpdateUserPassword implements UpdatesUserPasswords
 
 ### Auto-Accept Invitations
 
-When `->autoAcceptInvitations()` is enabled, invited users/employees will be exempt from creating a personal company during registration. If disabled, all users must create a personal company as part of the registration process if they don't already have one.
+This feature allows invited users to bypass the personal company creation step during registration and be redirected to accept their company invitation immediately. This ensures a smoother onboarding process for employees or team members joining an existing company. 
+
+If disabled, users must create a personal company during registration if they don’t already have one.
+
+To enable this, configure your `FilamentCompaniesServiceProvider`:
 ```php
 FilamentCompanies::make()
     ->companies(invitations: true)
     ->autoAcceptInvitations()
 ```
+
+When enabled, invited users can register and directly join their invited company without unnecessary setup steps.
 
 ### Example - Send Invitation Mail via Gmail SMTP
 
@@ -515,14 +543,14 @@ FilamentCompanies::make()
 4. **Copy** your app password and store it somewhere safe.
 
 6. **Add** the credentials in your application's `.env` file:
-```dosini
+```dotenv
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USERNAME=yourgmailusername@gmail.com
-MAIL_PASSWORD=of9f9279g924792g49t          
-MAIL_ENCRYPTION=tls                         
-MAIL_FROM_ADDRESS="filament@company.com"
+MAIL_USERNAME=<YOUR_GMAIL_EMAIL>
+MAIL_PASSWORD=<YOUR_GMAIL_APP_PASSWORD>  
+MAIL_ENCRYPTION=tls                    
+MAIL_FROM_ADDRESS=<YOUR_GMAIL_EMAIL>
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
@@ -648,18 +676,16 @@ http://filament.test/company/oauth/github/callback
 7. **Copy** the Client Secret & **store** somewhere safe
 
 8. **Add** the Client ID and Client Secret in `.env`
-```dosini
-GITHUB_CLIENT_ID=aluffgef97f9f79f434t
-GITHUB_CLIENT_SECRET=hefliueoioffbo8338yhf2p9f4g2gg33
+```dotenv
+GITHUB_CLIENT_ID=<YOUR_GITHUB_CLIENT_ID>
+GITHUB_CLIENT_SECRET=<YOUR_GITHUB_CLIENT_SECRET>
 ```
 
 ## Methodology
 
-- The following examples are a visual representation of the features this package supports that were provided by the methods implemented in Laravel Jetstream.
-- You may find all of the features as provided by the package [in the documentation](https://jetstream.laravel.com/3.x/features/teams.html).
-- Information about a User's companies may be accessed via the methods provided by the `Wallo\FilamentCompanies\HasCompanies` trait.
+- The following examples illustrate features supported by this package, inspired by methods originally implemented in Laravel Jetstream.
+- Information about a user's companies can be accessed through methods provided by the `Wallo\FilamentCompanies\HasCompanies` trait.
 - This trait is automatically applied to your application's `App\Models\User` model during installation.
-- This trait provides a variety of helpful methods that allow you to inspect a User's companies or company:
 
 ```php
 // Access a user's currently selected company...
@@ -676,6 +702,12 @@ $user->companies : Illuminate\Database\Eloquent\Collection
 
 // Access a user's "personal" company...
 $user->personalCompany() : Wallo\FilamentCompanies\Company
+
+// Get the user's primary company (prioritizes personal company)...
+$user->primaryCompany() : Wallo\FilamentCompanies\Company|null
+
+// Determine if the user has any companies...
+$user->hasAnyCompanies() : bool
 
 // Determine if a user owns a given company...
 $user->ownsCompany($company) : bool
@@ -730,4 +762,4 @@ Install the package in your application's `composer.json` file, using the `dev` 
 }
 ```
 
-Now, run `composer update` and continue by following the installation instructions above.
+Run `composer update`, then follow the installation instructions above.
