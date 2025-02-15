@@ -85,6 +85,25 @@ trait HasCompanies
     }
 
     /**
+     * Get the user's primary company.
+     *
+     * This will prioritize the personal company, but if none exists,
+     * it will return the first available company the user belongs to.
+     */
+    public function primaryCompany(): mixed
+    {
+        return $this->personalCompany() ?? $this->allCompanies()->first();
+    }
+
+    /**
+     * Determine if the user has any companies.
+     */
+    public function hasAnyCompanies(): bool
+    {
+        return $this->allCompanies()->isNotEmpty();
+    }
+
+    /**
      * Determine if the user owns the given company.
      */
     public function ownsCompany(mixed $company): bool

@@ -30,8 +30,8 @@ class SwitchCurrentCompany
             return;
         }
 
-        if (! $user->switchCompany($tenant)) {
-            $user->switchCompany($user->personalCompany());
+        if (! $user->switchCompany($tenant) && ($fallbackCompany = $user->primaryCompany())) {
+            $user->switchCompany($fallbackCompany);
         }
     }
 }

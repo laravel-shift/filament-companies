@@ -495,7 +495,16 @@ class UpdateUserPassword implements UpdatesUserPasswords
 
 ## Company Invitations
 
-### Example - Gmail
+### Auto-Accept Invitations
+
+When `->autoAcceptInvitations()` is enabled, invited users/employees will be exempt from creating a personal company during registration. If disabled, all users must create a personal company as part of the registration process if they don't already have one.
+```php
+FilamentCompanies::make()
+    ->companies(invitations: true)
+    ->autoAcceptInvitations()
+```
+
+### Example - Send Invitation Mail via Gmail SMTP
 
 1. **Sign in** to your account
 
