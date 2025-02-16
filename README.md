@@ -158,7 +158,7 @@ If [**Auto-Accept Invitations**](#auto-accept-invitations) is enabled, the Compa
 MenuItem::make()
     ->label('Company')
     ->icon('heroicon-o-building-office')
-    ->url(function (): string {
+    ->url(static function (): ?string {
         $user = Auth::user();
 
         if ($company = $user?->primaryCompany()) {
