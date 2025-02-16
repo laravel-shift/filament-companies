@@ -55,6 +55,8 @@ class FilamentCompanies implements Plugin
 
     public function register(Panel $panel): void
     {
+        static::$companyPanel = $panel->getId();
+
         if (static::hasCompanyFeatures()) {
             Livewire::component('filament.pages.companies.create_company', CreateCompany::class);
             Livewire::component('filament.pages.companies.company_settings', CompanySettings::class);

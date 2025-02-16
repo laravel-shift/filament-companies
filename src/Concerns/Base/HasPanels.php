@@ -2,20 +2,29 @@
 
 namespace Wallo\FilamentCompanies\Concerns\Base;
 
-use Filament\Facades\Filament;
+use LogicException;
 
 trait HasPanels
 {
     /**
      * The user panel.
      */
-    public static ?string $userPanel = null;
+    protected static string $userPanel;
+
+    /**
+     * The company panel.
+     */
+    protected static string $companyPanel;
 
     /**
      * Set the user panel.
      */
     public function userPanel(string $panel): static
     {
+        if (isset(static::$userPanel)) {
+            throw new LogicException('The user panel has already been configured to [' . static::$userPanel . '].');
+        }
+
         static::$userPanel = $panel;
 
         return $this;
@@ -26,6 +35,10 @@ trait HasPanels
      */
     public static function getUserPanel(): string
     {
+        if (! isset(static::$userPanel)) {
+            throw new LogicException('FilamentCompanies plugin has not been configured with a user panel.');
+        }
+
         return static::$userPanel;
     }
 
@@ -34,20 +47,18 @@ trait HasPanels
      */
     public static function hasUserPanel(): bool
     {
-        return static::$userPanel !== null;
+        return isset(static::$userPanel);
     }
 
     /**
      * Get the panel where the plugin is registered (The company panel).
      */
-    public static function getCompanyPanel(): ?string
+    public static function getCompanyPanel(): string
     {
-        foreach (Filament::getPanels() as $panel) {
-            if ($panel->hasPlugin('companies')) {
-                return $panel->getId();
-            }
+        if (! isset(static::$companyPanel)) {
+            throw new LogicException('FilamentCompanies plugin has not been registered to any panel.');
         }
 
-        return null;
+        return static::$companyPanel;
     }
 }
